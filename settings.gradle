@@ -1,0 +1,8 @@
+rootProject.name = 'tasks-http'
+
+include "tasks-http"
+project(":tasks-http").projectDir = file("impl")
+include "tasks-http-examples"
+project(":tasks-http-examples").projectDir = file("examples")
+
+

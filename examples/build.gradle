@@ -1,0 +1,30 @@
+
+dependencies {
+    implementation("com.github.jitpack:gradle-simple:1.0")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+
+    implementation project(":tasks-http")
+
+    implementation "com.github.mycordaapp:tasks:$tasksVersion"
+
+
+    testCompile("com.natpryce:hamkrest:$hamkrestVersion")
+    testCompile("org.junit.jupiter:junit-jupiter:$junitVersion")
+
+    //implementation 'com.github.mycordaapp:registry:0.0.2'
+
+    //testRuntime('org.jetbrains.spek:spek-junit-platform-engine:1.1.5') {
+    //    exclude group: 'org.junit.platform'
+    //    exclude group: 'org.jetbrains.kotlin'
+    //}
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile('org.junit.platform:junit-platform-runner:1.0.0')
+
+    testCompile('org.junit.platform:junit-platform-runner:1.0.0')
+
+    // spek v2
+    testCompile("org.spekframework.spek2:spek-dsl-jvm:2.0.0")
+    testCompile("org.spekframework.spek2:spek-runner-junit5:2.0.0")
+
+}
+
