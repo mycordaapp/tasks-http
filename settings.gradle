@@ -1,7 +1,11 @@
 rootProject.name = 'tasks-http'
 
-include "tasks-http"
-project(":tasks-http").projectDir = file("impl")
+include "tasks-http-common"
+project(":tasks-http-common").projectDir = file("common")
+include "tasks-http-server"
+project(":tasks-http-server").projectDir = file("server")
+include "tasks-http-client"
+project(":tasks-http-client").projectDir = file("client")
 include "tasks-http-examples"
 project(":tasks-http-examples").projectDir = file("examples")
 

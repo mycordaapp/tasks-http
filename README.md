@@ -13,7 +13,7 @@ As with everything in [myCorda dot App](https://mycorda.app), this library has m
 
 * Kotlin 1.4
 * Java 11
-* The [Http4k])(https://www.http4k.org/) framework
+* The [http4k](https://www.http4k.org/) toolkit
 * The [Tasks](https://github.com/mycordaapp/tasks#readme) framework
 * The object [Registry](https://github.com/mycordaapp/registry#readme)
 * The [Helpers](https://github.com/mycordaapp/helpers#readme) module

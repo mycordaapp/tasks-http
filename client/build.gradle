@@ -1,0 +1,38 @@
+dependencies {
+    implementation("com.github.jitpack:gradle-simple:1.0")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+
+    implementation project(":tasks-http-common")
+
+
+    // Jackson for JSON and YAML
+    implementation('com.fasterxml.jackson.core:jackson-databind:2.9.8')
+    implementation('com.fasterxml.jackson.module:jackson-module-kotlin:2.9.8')
+
+    implementation platform("org.http4k:http4k-bom:$http4kVersion")
+    implementation "org.http4k:http4k-core"
+    //implementation "org.http4k:http4k-server-jetty"
+    implementation "org.http4k:http4k-client-apache"
+
+    testCompile("com.natpryce:hamkrest:$hamkrestVersion")
+    testCompile("org.junit.jupiter:junit-jupiter:$junitVersion")
+
+    implementation "com.github.mycordaapp:tasks:$tasksVersion"
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile('org.junit.platform:junit-platform-runner:1.0.0')
+
+    testCompile('org.junit.platform:junit-platform-runner:1.0.0')
+
+    // spek v2
+    testCompile("org.spekframework.spek2:spek-dsl-jvm:2.0.0")
+    testCompile("org.spekframework.spek2:spek-runner-junit5:2.0.0")
+}
+
+test {
+    // set heap size for the test JVM(s)
+    minHeapSize = "128m"
+    maxHeapSize = "1024m"
+}
+
