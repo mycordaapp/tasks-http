@@ -15,8 +15,6 @@ import org.http4k.core.Request
 import org.http4k.core.Status
 import java.lang.RuntimeException
 import java.lang.StringBuilder
-import java.net.URLEncoder
-import java.util.HashMap
 
 class HttpTaskClient(
     private val baseUrl: String

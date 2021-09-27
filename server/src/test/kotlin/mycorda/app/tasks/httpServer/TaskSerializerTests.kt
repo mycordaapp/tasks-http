@@ -2,8 +2,10 @@ package mycorda.app.tasks.httpServer
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import org.junit.Test
 import java.util.*
+
+import org.junit.jupiter.api.Test
+
 
 class TaskSerializerTests {
     private val serializer = TaskSerializer()

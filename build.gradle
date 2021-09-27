@@ -7,8 +7,6 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
-        // for Spec - http://spekframework.org/docs/latest/
-        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0'
     }
 }
 
@@ -35,14 +33,9 @@ allprojects {
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
         kotlinOptions {
-            //l//anguageVersion = "1.2"
-            //apiVersion = "1.2"
             jvmTarget = "11"
-            //javaParameters = true
         }
     }
-
-
 
 }
 
@@ -51,8 +44,6 @@ subprojects {
     apply plugin: 'maven'
     apply plugin: 'org.jetbrains.dokka'
 
-    //sourceCompatibility = 1.8 // java 8
-    //targetCompatibility = 1.8
 
     task sourcesJar(type: Jar, dependsOn: classes) {
         classifier = 'sources'
@@ -64,8 +55,23 @@ subprojects {
         from javadoc.destinationDir
     }
 
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        reports { junitXml.setEnabled(true) }
+    }
+
     artifacts {
         archives sourcesJar
         archives javadocJar
+    }
+
+    dependencies {
+        implementation("com.github.jitpack:gradle-simple:1.0")
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+        implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+
+        testImplementation("com.natpryce:hamkrest:$hamkrestVersion")
+        testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     }
 }
