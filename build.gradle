@@ -1,12 +1,10 @@
 buildscript {
-
     repositories {
         mavenCentral()
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-
     }
 }
 
@@ -28,7 +26,7 @@ allprojects {
 
         // uncomment for local testing. Please DONT check in with
         // this enabled
-        mavenLocal()
+        //mavenLocal()
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
@@ -70,8 +68,18 @@ subprojects {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
+        implementation "com.github.mycordaapp:tasks:$tasksVersion"
+        implementation "com.github.mycordaapp:helpers:$helpersVersion"
+
         testImplementation("com.natpryce:hamkrest:$hamkrestVersion")
         testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
     }
+
+    test {
+        // set heap size for the test JVM(s)
+        minHeapSize = "128m"
+        maxHeapSize = "1024m"
+    }
+
 }

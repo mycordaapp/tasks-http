@@ -1,10 +1,6 @@
 dependencies {
-    implementation("com.github.jitpack:gradle-simple:1.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
 
     implementation project(":tasks-http-common")
-
 
 
     // Jackson for JSON and YAML
@@ -16,15 +12,4 @@ dependencies {
     implementation "org.http4k:http4k-client-apache"
 
     testImplementation project(":tasks-http-server")
-
-
-    implementation "com.github.mycordaapp:tasks:$tasksVersion"
-
 }
-
-//test {
-//    // set heap size for the test JVM(s)
-//    minHeapSize = "128m"
-//    maxHeapSize = "1024m"
-//}
-
