@@ -1,4 +1,4 @@
-package mycorda.app.tasks.httpServer
+package mycorda.app.tasks.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -8,8 +8,7 @@ import java.net.URL
 import java.util.*
 import kotlin.reflect.KClass
 
-
-class TaskSerializer() {
+class JsonSerializer() {
     private val mapper: ObjectMapper = ObjectMapper()
 
     init {
@@ -17,32 +16,40 @@ class TaskSerializer() {
         mapper.registerModule(module)
     }
 
-
-    fun deserialize(data: String, taskClazz: KClass<out Task>): Any? {
-        val reflections = TaskReflections(taskClazz)
-        val paramClazz = reflections.paramClass()
-
-        return doDeserialize(data, reflections, paramClazz)
+    fun serialize(model: BlockingTaskRequest): String {
+        return mapper.writeValueAsString(model)
     }
 
-    fun deserializeResult(data: String, taskClazz: KClass<out Task>): Any? {
-        val reflections = TaskReflections(taskClazz)
-        val clazz = reflections.resultClass()
+    fun deserializeBlockingTaskRequest(json: String): BlockingTaskRequest {
+        return mapper.readValue(json, BlockingTaskRequest::class.java)
+    }
 
-        return doDeserialize(data, reflections, clazz)
+
+//    fun deserialize(data: String, taskClazz: KClass<out Task>): Any? {
+//        val reflections = TaskReflections(taskClazz)
+//        val paramClazz = reflections.paramClass()
+//
+//        return doDeserialize(data, reflections, paramClazz)
+//    }
+
+    fun deserializeResult(data: String, outClazz: KClass<out Any>): Any? {
+        val reflections = TaskReflections()
+        //val outClazz = reflections.resultClass()
+
+        return doDeserialize(data, reflections, outClazz)
     }
 
     fun deserializeResult(data: String, taskClazz: KClass<out Task>, clazz: KClass<out Any>): Any? {
-        val reflections = TaskReflections(taskClazz)
+        val reflections = TaskReflections()
         //val clazz = reflections.resultClass()
 
         return doDeserialize(data, reflections, clazz)
     }
 
     private fun doDeserialize(data: String, reflections: TaskReflections, clazz: KClass<out Any>): Any? {
-        if (data.isBlank() && reflections.isParamOptional()) {
-            return null
-        }
+//        if (data.isBlank() && reflections.isParamOptional()) {
+//            return null
+//        }
 
         if (TaskReflections.isUnit(clazz)) {
             if (data.isNotBlank()) throw RuntimeException("doDeserialize found data '$data' when Unit / Nothing is expected")
@@ -65,7 +72,7 @@ class TaskSerializer() {
                 "String" -> data
                 "UUID" -> UUID.fromString(data)
                 "URL" -> URL(data)
-               // "File" -> createTmpFile(data)
+                // "File" -> createTmpFile(data)
                 else -> throw RuntimeException("Don't know about scalar ${clazz.simpleName}")
             }
         } else {
@@ -73,11 +80,11 @@ class TaskSerializer() {
         }
     }
 
-    fun deserializeValue(data: String, taskClazz: KClass<out Task>): Any? {
-        val reflections = TaskReflections(taskClazz)
-        val clazz = reflections.resultClass()
+    fun deserializeValue(data: String, outClazz: KClass<out Any>): Any? {
+        val reflections = TaskReflections()
+        //val clazz = reflections.resultClass()
 
-        return doDeserialize(data, reflections, clazz)
+        return doDeserialize(data, reflections, outClazz)
     }
 
     fun serializeResult(data: Any, prettyPrint: Boolean = false): String {

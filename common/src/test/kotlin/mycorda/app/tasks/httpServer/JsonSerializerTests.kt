@@ -2,13 +2,13 @@ package mycorda.app.tasks.httpServer
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import mycorda.app.tasks.common.TaskSerializer
+import mycorda.app.tasks.common.JsonSerializer
 import java.util.*
 import org.junit.jupiter.api.Test
 
 
-class TaskSerializerTests {
-    private val serializer = TaskSerializer()
+class JsonSerializerTests {
+    private val serializer = JsonSerializer()
 
     @Test
     fun `should serialize scalars`() {

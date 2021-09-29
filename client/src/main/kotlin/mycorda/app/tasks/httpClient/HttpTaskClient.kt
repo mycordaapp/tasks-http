@@ -4,7 +4,8 @@ import ClientContext
 import TaskClient
 import mycorda.app.tasks.AsyncResultChannelSinkLocator
 import mycorda.app.tasks.UniqueId
-import mycorda.app.tasks.common.TaskSerializer
+import mycorda.app.tasks.common.BlockingTaskRequest
+import mycorda.app.tasks.common.JsonSerializer
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
@@ -15,44 +16,62 @@ import org.http4k.core.Request
 import org.http4k.core.Status
 import java.lang.RuntimeException
 import java.lang.StringBuilder
+import kotlin.reflect.KClass
+
 
 class HttpTaskClient(
-    private val baseUrl: String
+    val baseUrl: String
 ) : TaskClient {
-    private val taskSerializer = TaskSerializer()
-    override fun <I, O> execAsync(
+    val serializer = JsonSerializer()
+    override fun <I, O : Any> execAsync(
         ctx: ClientContext,
         taskName: String,
         channelLocator: AsyncResultChannelSinkLocator,
         channelId: UniqueId,
-        input: I
+        input: I,
+        outputClazz: KClass<O>
     ) {
         TODO("Not yet implemented")
     }
 
-    override fun <I, O> execBlocking(ctx: ClientContext, taskName: String, input: I): O {
-        val body = inputToString(input)
-        val url = buildUrl(baseUrl, taskName, ctx, null)
+    override fun <I, O : Any> execBlocking(
+        ctx: ClientContext,
+        taskName: String,
+        input: I,
+        outputClazz: KClass<O>
+    ): O {
+        val url = buildUrl(baseUrl, ctx, null)
+        val model = BlockingTaskRequest(
+            task = taskName,
+            input = inputToString(input),
+            inputClazz = input!!::class.qualifiedName!!,
+            outputClazz = outputClazz.qualifiedName!!
+        )
+        val body = serializer.serialize(model)
+
+        val inputClazz = input!!::class.qualifiedName
+
 
         val request = Request(Method.POST, url)
             .body(body)
 
         val result = runRequest(request, taskName, 10)
 
-        val deserialised = taskSerializer.deserializeResult(result, Any::class)
+        val deserialised = serializer.deserializeResult(result, outputClazz)
         return deserialised as O
 
     }
 
+
     private fun <I> inputToString(input: I): String {
-        if (input != null) {
-            return taskSerializer.serializeResult(input as Any)
+        return if (input != null) {
+            serializer.serializeResult(input as Any)
         } else {
-            return ""
+            ""
         }
     }
 
-    private fun runRequest(request: Request, task: String, timeoutSec: Int = 120): String {
+    fun runRequest(request: Request, task: String, timeoutSec: Int = 120): String {
         val client: HttpHandler = apacheClient(timeoutSec)
         val result = client(request)
 
@@ -66,25 +85,25 @@ class HttpTaskClient(
     private fun apacheClient(timeoutSec: Int): HttpHandler {
         val closeable = HttpClients.custom().setDefaultRequestConfig(
             RequestConfig.custom()
-            .setRedirectsEnabled(false)
-            .setConnectTimeout(Timeout.ofMilliseconds(1000))
-            //.setSocketTimeout(timeoutSec * 1000)
-            //.setCookieSpec(CookieSpecs.IGNORE_COOKIES)
-            .build()).build()
+                .setRedirectsEnabled(false)
+                .setConnectTimeout(Timeout.ofMilliseconds(1000))
+                //.setSocketTimeout(timeoutSec * 1000)
+                //.setCookieSpec(CookieSpecs.IGNORE_COOKIES)
+                .build()
+        ).build()
 
         return ApacheClient(client = closeable)
     }
 
-    private fun buildUrl(
+    fun buildUrl(
         baseUrl: String,
-        task: String,
         ctx: ClientContext,
         timeout: Int?
     ): String {
         var paramMarker = "?"
         val sb = StringBuilder(baseUrl)
         if (!sb.endsWith("/")) sb.append("/")
-        sb.append("api/task/").append(task).append("/exec")
+        sb.append("api/exec/")
 //        if (ctx.provisioningState() != null && ctx.provisioningState().stages().isNotEmpty()) {
 //            paramMarker = "&"
 //            val data = HashMap<String, Any>()

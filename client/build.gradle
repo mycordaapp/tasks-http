@@ -2,7 +2,6 @@ dependencies {
 
     implementation project(":tasks-http-common")
 
-
     // Jackson for JSON and YAML
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -11,5 +10,6 @@ dependencies {
     implementation "org.http4k:http4k-core"
     implementation "org.http4k:http4k-client-apache"
 
+    testImplementation("org.http4k:http4k-server-jetty")
     testImplementation project(":tasks-http-server")
 }
