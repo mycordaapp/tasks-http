@@ -10,9 +10,6 @@ import mycorda.app.tasks.httpServer.Controller
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.junit.jupiter.api.Test
-import kotlin.reflect.KClass
-import kotlin.reflect.KClassifier
-import kotlin.reflect.KType
 
 
 class HttpTaskClientTests {
@@ -23,12 +20,12 @@ class HttpTaskClientTests {
         val server = Controller(registry).asServer(Jetty(1234)).start()
     }
 
-    @Test
-    fun `should do something`() {
-        var x = 2
-        assertThat(x + 1, equalTo(3))
-        assert(x == 2)
-    }
+//    @Test
+//    fun `should do something`() {
+//        var x = 2
+//        assertThat(x + 1, equalTo(3))
+//        assert(x == 2)
+//    }
 
     @Test
     fun `should call blocking task`() {
