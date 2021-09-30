@@ -7,25 +7,34 @@ import mycorda.app.registry.Registry
 import mycorda.app.tasks.TaskFactory
 import mycorda.app.tasks.demo.CalcSquareTask
 import mycorda.app.tasks.httpServer.Controller
+import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpTaskClientTests {
+    private val server: Http4kServer
+
     init {
         val factory = TaskFactory()
         factory.register(CalcSquareTask::class)
         val registry = Registry().store(factory)
-        val server = Controller(registry).asServer(Jetty(1234)).start()
+        server = Controller(registry).asServer(Jetty(1234))
     }
 
-//    @Test
-//    fun `should do something`() {
-//        var x = 2
-//        assertThat(x + 1, equalTo(3))
-//        assert(x == 2)
-//    }
+    @BeforeAll
+    fun `start`() {
+        server.start()
+    }
+
+    @AfterAll
+    fun `stop`() {
+        server.stop()
+    }
 
     @Test
     fun `should call blocking task`() {
@@ -35,7 +44,8 @@ class HttpTaskClientTests {
         val result = client.execBlocking(
             ctx, "mycorda.app.tasks.demo.CalcSquareTask", 10, Int::class
         )
-        println(result)
+        assertThat(result, equalTo(100))
     }
+
 
 }
