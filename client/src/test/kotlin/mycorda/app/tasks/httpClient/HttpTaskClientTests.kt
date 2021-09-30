@@ -10,13 +10,9 @@ import mycorda.app.tasks.demo.echo.*
 import mycorda.app.tasks.httpServer.Controller
 import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
-import org.http4k.server.asServer
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
+import org.http4k.server.asServer import org.junit.jupiter.api.*
 import java.math.BigDecimal
 import java.util.*
-import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpTaskClientTests {
@@ -32,7 +28,6 @@ class HttpTaskClientTests {
         factory.register(EchoBigDecimalTask::class)
         factory.register(EchoBooleanTask::class)
         factory.register(EchoUUIDTask::class)
-
 
         val registry = Registry().store(factory)
         server = Controller(registry).asServer(Jetty(1234))
@@ -77,11 +72,15 @@ class HttpTaskClientTests {
         val ctx = SimpleClientContext()
 
         combinations.forEach {
-            val param = it.first
-            val result = client.execBlocking(
-                ctx, "mycorda.app.tasks.demo.echo.${it.second}", param, param::class
-            )
-            assertThat(result, equalTo(param)) { "Didn't echo correct value for combination: $it" }
+            try {
+                val param = it.first
+                val result = client.execBlocking(
+                    ctx, "mycorda.app.tasks.demo.echo.${it.second}", param, param::class
+                )
+                assertThat(result, equalTo(param)) { "Didn't echo correct value for combination: $it" }
+            } catch (ex: Exception) {
+                fail {"Combination $it failed with ${ex.message}"}
+            }
         }
     }
 
