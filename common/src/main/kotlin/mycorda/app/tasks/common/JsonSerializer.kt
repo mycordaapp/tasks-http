@@ -25,13 +25,6 @@ class JsonSerializer() {
     }
 
 
-//    fun deserialize(data: String, taskClazz: KClass<out Task>): Any? {
-//        val reflections = TaskReflections(taskClazz)
-//        val paramClazz = reflections.paramClass()
-//
-//        return doDeserialize(data, reflections, paramClazz)
-//    }
-
     fun deserializeResult(data: String, outClazz: KClass<out Any>): Any? {
         val reflections = TaskReflections()
         //val outClazz = reflections.resultClass()

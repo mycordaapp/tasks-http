@@ -34,22 +34,19 @@ class Controller(private val registry: Registry) : HttpHandler {
     )
 
     private fun handleExecTask(it: Request): Response {
-        println("here we are")
+        //println("here we are")
         println(it.bodyString())
 
         val model = serializer.deserializeBlockingTaskRequest(it.bodyString())
         println(model)
 
-        val i: Int = 1
-        val t = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
-
+        val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
         val ctx = SimpleExecutionContext()
-
         val inputClazz = clazz(model.inputClazz)
 
         val input = serializer.deserializeResult(model.input, inputClazz)
 
-        val result = t.exec(ctx, input as Any)
+        val result = task.exec(ctx, input as Any)
 
         val x = serializer.serializeResult(result)
 
@@ -57,8 +54,16 @@ class Controller(private val registry: Registry) : HttpHandler {
     }
 
     fun clazz(clazzName: String): KClass<Any> {
-        return if (clazzName == "kotlin.Int") 1::class as KClass<Any>
-        else Class.forName(clazzName).kotlin as KClass<Any>
+        return when (clazzName) {
+            "kotlin.Int" -> 1::class as KClass<Any>
+            "kotlin.Long" -> 1L::class as KClass<Any>
+            "kotlin.Double" -> 1.23::class as KClass<Any>
+            "kotlin.Float" -> 1.23f::class as KClass<Any>
+            "kotlin.Boolean" -> true::class as KClass<Any>
+            else -> Class.forName(clazzName).kotlin as KClass<Any>
+        }
+        //return if (clazzName == "kotlin.Int") 1::class as KClass<Any>
+        //else Class.forName(clazzName).kotlin as KClass<Any>
     }
 
     fun execeptionWrapper(x: KFunction1<Request, Response>, i: Request): Response {
