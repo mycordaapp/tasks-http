@@ -44,11 +44,11 @@ class Controller(private val registry: Registry) : HttpHandler {
         val ctx = SimpleExecutionContext()
         val inputClazz = clazz(model.inputClazz)
 
-        val input = serializer.deserializeResult(model.input, inputClazz)
+        val input = serializer.deserializeData(model.inputSerialized, inputClazz)
 
         val result = task.exec(ctx, input as Any)
 
-        val x = serializer.serializeResult(result)
+        val x = serializer.serializeData(result)
 
         return Response.text(x)
     }

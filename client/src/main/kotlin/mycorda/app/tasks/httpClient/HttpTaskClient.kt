@@ -42,25 +42,25 @@ class HttpTaskClient(
         val url = buildUrl(baseUrl, ctx, null)
         val model = BlockingTaskRequest(
             task = taskName,
-            input = inputToString(input),
+            inputSerialized = inputToString(input),
             inputClazz = input!!::class.qualifiedName!!,
             outputClazz = outputClazz.qualifiedName!!
         )
-        val body = serializer.serialize(model)
+        val body = serializer.serializeBlockingTaskRequest(model)
 
         val request = Request(Method.POST, url)
             .body(body)
 
         val result = runRequest(request, taskName, 10)
 
-        val deserialized = serializer.deserializeResult(result, outputClazz)
+        val deserialized = serializer.deserializeData(result, outputClazz)
         return deserialized as O
     }
 
 
     private fun <I> inputToString(input: I): String {
         return if (input != null) {
-            serializer.serializeResult(input as Any, true)
+            serializer.serializeData(input as Any, true)
         } else {
             ""
         }
