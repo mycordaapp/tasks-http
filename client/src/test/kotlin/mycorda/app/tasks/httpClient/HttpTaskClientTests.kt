@@ -10,7 +10,8 @@ import mycorda.app.tasks.demo.echo.*
 import mycorda.app.tasks.httpServer.Controller
 import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
-import org.http4k.server.asServer import org.junit.jupiter.api.*
+import org.http4k.server.asServer
+import org.junit.jupiter.api.*
 import java.math.BigDecimal
 import java.util.*
 
@@ -28,6 +29,8 @@ class HttpTaskClientTests {
         factory.register(EchoBigDecimalTask::class)
         factory.register(EchoBooleanTask::class)
         factory.register(EchoUUIDTask::class)
+        factory.register(EchoEnumTask::class)
+        factory.register(EchoDemoModelTask::class)
 
         val registry = Registry().store(factory)
         server = Controller(registry).asServer(Jetty(1234))
@@ -54,9 +57,10 @@ class HttpTaskClientTests {
         assertThat(result, equalTo(100))
     }
 
-
     @Test
-    fun `should serialise scalars correctly`() {
+    fun `should serialise echoed output back to original input`() {
+        // basically we check "round-tripping" via the serialiser, i.e. do we get back the
+        // original inpout
         val random = Random()
         val combinations = listOf(
             Pair(random.nextLong(), "EchoLongTask"),
@@ -65,9 +69,10 @@ class HttpTaskClientTests {
             Pair(random.nextFloat(), "EchoFloatTask"),
             Pair(random.nextBoolean(), "EchoBooleanTask"),
             Pair(BigDecimal(random.nextDouble()), "EchoBigDecimalTask"),
-            Pair(UUID.randomUUID(), "EchoUUIDTask")
+            Pair(UUID.randomUUID(), "EchoUUIDTask"),
+            Pair(Colour.random(), "EchoEnumTask"),
+            Pair(DemoModel(), "EchoDemoModelTask")
         )
-
         val client = HttpTaskClient("http://localhost:1234")
         val ctx = SimpleClientContext()
 
@@ -79,7 +84,7 @@ class HttpTaskClientTests {
                 )
                 assertThat(result, equalTo(param)) { "Didn't echo correct value for combination: $it" }
             } catch (ex: Exception) {
-                fail {"Combination $it failed with ${ex.message}"}
+                fail { "Combination $it failed with ${ex.message}" }
             }
         }
     }

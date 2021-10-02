@@ -18,11 +18,10 @@ import java.lang.RuntimeException
 import java.lang.StringBuilder
 import kotlin.reflect.KClass
 
-
 class HttpTaskClient(
-    val baseUrl: String
+    private val baseUrl: String
 ) : TaskClient {
-    val serializer = JsonSerializer()
+    private val serializer = JsonSerializer()
     override fun <I, O : Any> execAsync(
         ctx: ClientContext,
         taskName: String,
@@ -49,29 +48,25 @@ class HttpTaskClient(
         )
         val body = serializer.serialize(model)
 
-        val inputClazz = input!!::class.qualifiedName
-
-
         val request = Request(Method.POST, url)
             .body(body)
 
         val result = runRequest(request, taskName, 10)
 
-        val deserialised = serializer.deserializeResult(result, outputClazz)
-        return deserialised as O
-
+        val deserialized = serializer.deserializeResult(result, outputClazz)
+        return deserialized as O
     }
 
 
     private fun <I> inputToString(input: I): String {
         return if (input != null) {
-            serializer.serializeResult(input as Any)
+            serializer.serializeResult(input as Any, true)
         } else {
             ""
         }
     }
 
-    fun runRequest(request: Request, task: String, timeoutSec: Int = 120): String {
+    private fun runRequest(request: Request, task: String, timeoutSec: Int = 120): String {
         val client: HttpHandler = apacheClient(timeoutSec)
         val result = client(request)
 
@@ -95,7 +90,7 @@ class HttpTaskClient(
         return ApacheClient(client = closeable)
     }
 
-    fun buildUrl(
+    private fun buildUrl(
         baseUrl: String,
         ctx: ClientContext,
         timeout: Int?
@@ -104,20 +99,6 @@ class HttpTaskClient(
         val sb = StringBuilder(baseUrl)
         if (!sb.endsWith("/")) sb.append("/")
         sb.append("api/exec/")
-//        if (ctx.provisioningState() != null && ctx.provisioningState().stages().isNotEmpty()) {
-//            paramMarker = "&"
-//            val data = HashMap<String, Any>()
-//            ctx.provisioningState().stages().forEach {
-//                data.put(it, ctx.provisioningState().outputs(it))
-//            }
-//            val json = URLEncoder.encode(JSONObject(data).toString(2))
-//            sb.append("?provisioningState=$json")
-//        }
-//        if (ctx.instanceQualifier() != null) {
-//            sb.append(paramMarker)
-//            sb.append("instanceQualifier=${ctx.instanceQualifier()}")
-//            paramMarker = "&"
-//        }
         if (timeout != null) {
             sb.append(paramMarker)
             sb.append("timeout=$timeout")
