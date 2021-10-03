@@ -4,8 +4,8 @@ import ClientContext
 import TaskClient
 import mycorda.app.tasks.AsyncResultChannelSinkLocator
 import mycorda.app.tasks.UniqueId
-import mycorda.app.tasks.common.BlockingTaskRequest
-import mycorda.app.tasks.common.JsonSerializer
+import mycorda.app.tasks.serialisation.BlockingTaskRequest
+import mycorda.app.tasks.serialisation.JsonSerialiser
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
@@ -21,7 +21,7 @@ import kotlin.reflect.KClass
 class HttpTaskClient(
     private val baseUrl: String
 ) : TaskClient {
-    private val serializer = JsonSerializer()
+    private val serializer = JsonSerialiser()
     override fun <I, O : Any> execAsync(
         ctx: ClientContext,
         taskName: String,

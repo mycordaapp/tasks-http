@@ -3,8 +3,8 @@ package mycorda.app.tasks.httpServer
 import mycorda.app.registry.Registry
 import mycorda.app.tasks.BlockingTask
 import mycorda.app.tasks.TaskFactory
-import mycorda.app.tasks.common.JsonSerializer
 import mycorda.app.tasks.executionContext.SimpleExecutionContext
+import mycorda.app.tasks.serialisation.JsonSerialiser
 import org.http4k.core.*
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
@@ -15,8 +15,7 @@ import kotlin.reflect.KFunction1
 data class ExecBlockingTaskRequest(val task: String, val input: Any)
 
 class Controller(private val registry: Registry) : HttpHandler {
-
-    private val serializer = registry.geteOrElse(JsonSerializer::class.java, JsonSerializer())
+    private val serializer = registry.geteOrElse(JsonSerialiser::class.java, JsonSerialiser())
     private val taskFactory = registry.get(TaskFactory::class.java)
 
     private val routes: RoutingHttpHandler = routes(
@@ -25,7 +24,7 @@ class Controller(private val registry: Registry) : HttpHandler {
                 Response.text("running")
             },
             "/exec" bind Method.POST to {
-                execeptionWrapper(::handleExecTask, it)
+                exceptionWrapper(::handleExecTask, it)
             }
         ),
         "/ping" bind Method.GET to {
@@ -34,11 +33,8 @@ class Controller(private val registry: Registry) : HttpHandler {
     )
 
     private fun handleExecTask(it: Request): Response {
-        //println("here we are")
-        println(it.bodyString())
 
         val model = serializer.deserializeBlockingTaskRequest(it.bodyString())
-        println(model)
 
         val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
         val ctx = SimpleExecutionContext()
@@ -66,7 +62,7 @@ class Controller(private val registry: Registry) : HttpHandler {
         //else Class.forName(clazzName).kotlin as KClass<Any>
     }
 
-    fun execeptionWrapper(x: KFunction1<Request, Response>, i: Request): Response {
+    private fun exceptionWrapper(x: KFunction1<Request, Response>, i: Request): Response {
         return try {
             x.invoke(i)
         } catch (ex: Exception) {
