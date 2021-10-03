@@ -16,13 +16,14 @@ import org.http4k.core.Request
 import org.http4k.core.Status
 import java.lang.RuntimeException
 import java.lang.StringBuilder
+import java.util.concurrent.TimeUnit
 import kotlin.reflect.KClass
 
 class HttpTaskClient(
     private val baseUrl: String
 ) : TaskClient {
     private val serializer = JsonSerialiser()
-    override fun <I, O : Any> execAsync(
+    override fun <I : Any, O : Any> execAsync(
         ctx: ClientContext,
         taskName: String,
         channelLocator: AsyncResultChannelSinkLocator,
@@ -33,7 +34,7 @@ class HttpTaskClient(
         TODO("Not yet implemented")
     }
 
-    override fun <I, O : Any> execBlocking(
+    override fun <I : Any, O : Any> execBlocking(
         ctx: ClientContext,
         taskName: String,
         input: I,
@@ -43,24 +44,25 @@ class HttpTaskClient(
         val model = BlockingTaskRequest(
             task = taskName,
             inputSerialized = inputToString(input),
-            inputClazz = input!!::class.qualifiedName!!,
+            inputClazz = input::class.qualifiedName!!,
             outputClazz = outputClazz.qualifiedName!!
         )
-        val body = serializer.serializeBlockingTaskRequest(model)
+        val body = serializer.serialiseBlockingTaskRequest(model)
 
         val request = Request(Method.POST, url)
             .body(body)
 
         val result = runRequest(request, taskName, 10)
 
-        val deserialized = serializer.deserializeData(result, outputClazz)
+        val deserialized = serializer.deserialiseData(result, outputClazz)
+        @Suppress("UNCHECKED_CAST")
         return deserialized as O
     }
 
 
     private fun <I> inputToString(input: I): String {
         return if (input != null) {
-            serializer.serializeData(input as Any, true)
+            serializer.serialiseData(input as Any, true)
         } else {
             ""
         }
@@ -82,7 +84,7 @@ class HttpTaskClient(
             RequestConfig.custom()
                 .setRedirectsEnabled(false)
                 .setConnectTimeout(Timeout.ofMilliseconds(1000))
-                //.setSocketTimeout(timeoutSec * 1000)
+                .setResponseTimeout(Timeout.of(timeoutSec.toLong(), TimeUnit.SECONDS))
                 //.setCookieSpec(CookieSpecs.IGNORE_COOKIES)
                 .build()
         ).build()
@@ -96,6 +98,7 @@ class HttpTaskClient(
         timeout: Int?
     ): String {
         var paramMarker = "?"
+        ctx.customHeaders() // what to do with these ?
         val sb = StringBuilder(baseUrl)
         if (!sb.endsWith("/")) sb.append("/")
         sb.append("api/exec/")

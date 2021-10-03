@@ -33,22 +33,23 @@ class Controller(private val registry: Registry) : HttpHandler {
     )
 
     private fun handleExecTask(it: Request): Response {
+        val model = serializer.deserialiseBlockingTaskRequest(it.bodyString())
 
-        val model = serializer.deserializeBlockingTaskRequest(it.bodyString())
-
+        @Suppress("UNCHECKED_CAST")
         val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
         val ctx = SimpleExecutionContext()
         val inputClazz = clazz(model.inputClazz)
 
-        val input = serializer.deserializeData(model.inputSerialized, inputClazz)
+        val input = serializer.deserialiseData(model.inputSerialized, inputClazz)
 
         val result = task.exec(ctx, input as Any)
 
-        val x = serializer.serializeData(result)
+        val x = serializer.serialiseData(result)
 
         return Response.text(x)
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun clazz(clazzName: String): KClass<Any> {
         return when (clazzName) {
             "kotlin.Int" -> 1::class as KClass<Any>
@@ -58,8 +59,6 @@ class Controller(private val registry: Registry) : HttpHandler {
             "kotlin.Boolean" -> true::class as KClass<Any>
             else -> Class.forName(clazzName).kotlin as KClass<Any>
         }
-        //return if (clazzName == "kotlin.Int") 1::class as KClass<Any>
-        //else Class.forName(clazzName).kotlin as KClass<Any>
     }
 
     private fun exceptionWrapper(x: KFunction1<Request, Response>, i: Request): Response {

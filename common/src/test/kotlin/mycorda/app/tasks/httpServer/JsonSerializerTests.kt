@@ -12,9 +12,9 @@ class JsonSerializerTests {
 
     @Test
     fun `should serialize scalars`() {
-        assertThat(serializer.serializeData(123), equalTo("123"))
-        assertThat(serializer.serializeData("aString"), equalTo("aString"))
-        assertThat(serializer.serializeData(UUID(1, 2)), equalTo("00000000-0000-0001-0000-000000000002"))
+        assertThat(serializer.serialiseData(123), equalTo("123"))
+        assertThat(serializer.serialiseData("aString"), equalTo("aString"))
+        assertThat(serializer.serialiseData(UUID(1, 2)), equalTo("00000000-0000-0001-0000-000000000002"))
     }
 
     @Test
