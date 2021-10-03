@@ -1,6 +1,7 @@
 # The "Tasks-Http" framework
 
-[![Build Status](https://travis-ci.com/mycordaapp/tasks-http.svg?branch=master)](https://app.travis-ci.com/github/mycordaapp/tasks-http)
+[![Build Status](https://travis-ci.com/mycordaapp/tasks-http.svg?branch=master)](https://app.travis-ci.com/github/mycordaapp/tasks-http) [travis]
+[![Circle CI](https://circleci.com/gh/mycordaapp/tasks-http.svg?style=shield)](https://circleci.com/gh/mycordaapp/tasks-http) [circleci]
 [![Licence Status](https://img.shields.io/github/license/mycordaapp/tasks)](https://github.com/mycordaapp/tasks-http/blob/master/licence.txt)
 
 ## What it does
