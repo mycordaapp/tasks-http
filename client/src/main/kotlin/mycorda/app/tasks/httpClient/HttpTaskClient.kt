@@ -2,11 +2,11 @@ package mycorda.app.tasks.httpClient
 
 
 import mycorda.app.tasks.AsyncResultChannelSinkLocator
-import mycorda.app.tasks.UniqueId
 import mycorda.app.tasks.client.ClientContext
 import mycorda.app.tasks.client.TaskClient
 import mycorda.app.tasks.httpCommon.BlockingTaskRequest
 import mycorda.app.tasks.httpCommon.Serialiser
+import mycorda.app.types.UniqueId
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
