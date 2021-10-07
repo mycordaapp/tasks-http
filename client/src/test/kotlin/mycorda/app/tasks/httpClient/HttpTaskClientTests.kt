@@ -1,10 +1,10 @@
 package mycorda.app.tasks.httpClient
 
-import SimpleClientContext
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import mycorda.app.registry.Registry
 import mycorda.app.tasks.TaskFactory
+import mycorda.app.tasks.client.SimpleClientContext
 import mycorda.app.tasks.demo.CalcSquareTask
 import mycorda.app.tasks.demo.echo.*
 import mycorda.app.tasks.httpServer.Controller
@@ -18,6 +18,7 @@ import java.util.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpTaskClientTests {
     private val server: Http4kServer
+    private val port: Int
 
     init {
         val factory = TaskFactory()
@@ -32,8 +33,9 @@ class HttpTaskClientTests {
         factory.register(EchoEnumTask::class)
         factory.register(EchoDemoModelTask::class)
 
+        port = 1234   // todo - auto detect port
         val registry = Registry().store(factory)
-        server = Controller(registry).asServer(Jetty(1234))
+        server = Controller(registry).asServer(Jetty(port))
     }
 
     @BeforeAll

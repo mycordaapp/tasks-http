@@ -1,11 +1,12 @@
 package mycorda.app.tasks.httpClient
 
-import ClientContext
-import TaskClient
+
 import mycorda.app.tasks.AsyncResultChannelSinkLocator
 import mycorda.app.tasks.UniqueId
-import mycorda.app.tasks.serialisation.BlockingTaskRequest
-import mycorda.app.tasks.serialisation.JsonSerialiser
+import mycorda.app.tasks.client.ClientContext
+import mycorda.app.tasks.client.TaskClient
+import mycorda.app.tasks.httpCommon.BlockingTaskRequest
+import mycorda.app.tasks.httpCommon.Serialiser
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
@@ -22,7 +23,7 @@ import kotlin.reflect.KClass
 class HttpTaskClient(
     private val baseUrl: String
 ) : TaskClient {
-    private val serializer = JsonSerialiser()
+    private val serializer = Serialiser()
     override fun <I : Any, O : Any> execAsync(
         ctx: ClientContext,
         taskName: String,
@@ -43,9 +44,7 @@ class HttpTaskClient(
         val url = buildUrl(baseUrl, ctx, null)
         val model = BlockingTaskRequest(
             task = taskName,
-            inputSerialized = inputToString(input),
-            inputClazz = input::class.qualifiedName!!,
-            outputClazz = outputClazz.qualifiedName!!
+            inputSerialized = inputToJsonString(input)
         )
         val body = serializer.serialiseBlockingTaskRequest(model)
 
@@ -54,15 +53,21 @@ class HttpTaskClient(
 
         val result = runRequest(request, taskName, 10)
 
-        val deserialized = serializer.deserialiseData(result, outputClazz)
-        @Suppress("UNCHECKED_CAST")
-        return deserialized as O
+
+        val deserialized = serializer.deserialiseData(result)
+
+        if (deserialized.isValue() || deserialized.isNothing()) {
+            @Suppress("UNCHECKED_CAST")
+            return deserialized.any() as O
+        } else {
+            throw deserialized.exception()
+        }
     }
 
 
-    private fun <I> inputToString(input: I): String {
+    private fun <I> inputToJsonString(input: I): String {
         return if (input != null) {
-            serializer.serialiseData(input as Any, true)
+            serializer.serialiseData(input as Any)
         } else {
             ""
         }

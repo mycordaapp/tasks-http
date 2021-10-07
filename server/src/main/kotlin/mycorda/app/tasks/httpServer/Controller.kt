@@ -4,18 +4,17 @@ import mycorda.app.registry.Registry
 import mycorda.app.tasks.BlockingTask
 import mycorda.app.tasks.TaskFactory
 import mycorda.app.tasks.executionContext.SimpleExecutionContext
-import mycorda.app.tasks.serialisation.JsonSerialiser
 import org.http4k.core.*
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.routes
-import kotlin.reflect.KClass
 import kotlin.reflect.KFunction1
+import mycorda.app.tasks.httpCommon.Serialiser
 
 data class ExecBlockingTaskRequest(val task: String, val input: Any)
 
 class Controller(private val registry: Registry) : HttpHandler {
-    private val serializer = registry.geteOrElse(JsonSerialiser::class.java, JsonSerialiser())
+    private val serializer = registry.geteOrElse(Serialiser::class.java, Serialiser())
     private val taskFactory = registry.get(TaskFactory::class.java)
 
     private val routes: RoutingHttpHandler = routes(
@@ -38,28 +37,31 @@ class Controller(private val registry: Registry) : HttpHandler {
         @Suppress("UNCHECKED_CAST")
         val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
         val ctx = SimpleExecutionContext()
-        val inputClazz = clazz(model.inputClazz)
+        val inputDeserialised = serializer.deserialiseData(model.inputSerialized)
 
-        val input = serializer.deserialiseData(model.inputSerialized, inputClazz)
-
-        val result = task.exec(ctx, input as Any)
-
-        val x = serializer.serialiseData(result)
-
-        return Response.text(x)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    fun clazz(clazzName: String): KClass<Any> {
-        return when (clazzName) {
-            "kotlin.Int" -> 1::class as KClass<Any>
-            "kotlin.Long" -> 1L::class as KClass<Any>
-            "kotlin.Double" -> 1.23::class as KClass<Any>
-            "kotlin.Float" -> 1.23f::class as KClass<Any>
-            "kotlin.Boolean" -> true::class as KClass<Any>
-            else -> Class.forName(clazzName).kotlin as KClass<Any>
+        return try {
+            val output = task.exec(ctx, inputDeserialised.any())
+            val outputSerialised = serializer.serialiseData(output)
+            Response.json(outputSerialised)
+        } catch (ex : Exception) {
+            val exceptionSerialised = serializer.serialiseData(ex)
+            Response.json(exceptionSerialised)
         }
+
     }
+
+//    @Suppress("UNCHECKED_CAST")
+//    fun clazz(clazzName: String): KClass<Any> {
+//        return when (clazzName) {
+//            "kotlin.Int" -> 1::class as KClass<Any>
+//            "kotlin.Long" -> 1L::class as KClass<Any>
+//            "kotlin.Double" -> 1.23::class as KClass<Any>
+//            "kotlin.Float" -> 1.23f::class as KClass<Any>
+//            "kotlin.Boolean" -> true::class as KClass<Any>
+//            "kotlin.String" -> ""::class as KClass<Any>
+//            else -> Class.forName(clazzName).kotlin as KClass<Any>
+//        }
+//    }
 
     private fun exceptionWrapper(x: KFunction1<Request, Response>, i: Request): Response {
         return try {

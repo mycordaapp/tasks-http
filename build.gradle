@@ -67,10 +67,17 @@ subprojects {
         implementation("com.github.jitpack:gradle-simple:1.0")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
         implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+        
+        // Jackson for JSON and YAML
+        implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+        implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+
 
         implementation "com.github.mycordaapp:tasks:$tasksVersion"
-        implementation "com.github.mycordaapp:helpers:$helpersVersion"
+        implementation "com.github.mycordaapp:commons:$commonsVersion"
         implementation "com.github.mycordaapp:registry:$registryVersion"
+        implementation "com.github.mycordaapp:really-simple-serialisation:$rssVersion"
+
 
         testImplementation("com.natpryce:hamkrest:$hamkrestVersion")
         testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
