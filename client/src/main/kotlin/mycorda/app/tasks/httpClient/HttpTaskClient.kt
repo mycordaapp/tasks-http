@@ -1,6 +1,5 @@
 package mycorda.app.tasks.httpClient
 
-
 import mycorda.app.tasks.AsyncResultChannelSinkLocator
 import mycorda.app.tasks.client.ClientContext
 import mycorda.app.tasks.client.TaskClient
@@ -48,11 +47,9 @@ class HttpTaskClient(
         )
         val body = serializer.serialiseBlockingTaskRequest(model)
 
-        val request = Request(Method.POST, url)
-            .body(body)
+        val request = Request(Method.POST, url).body(body)
 
         val result = runRequest(request, taskName, 10)
-
 
         val deserialized = serializer.deserialiseData(result)
 

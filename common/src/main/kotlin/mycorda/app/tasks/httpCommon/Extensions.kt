@@ -1,4 +1,4 @@
-package mycorda.app.tasks.httpServer
+package mycorda.app.tasks.httpCommon
 
 import org.http4k.core.Response
 import org.http4k.core.Status

@@ -2,12 +2,17 @@ package mycorda.app.tasks.httpClient
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
+import com.natpryce.hamkrest.isEmptyString
 import mycorda.app.registry.Registry
 import mycorda.app.tasks.TaskFactory
 import mycorda.app.tasks.client.SimpleClientContext
+import mycorda.app.tasks.client.SimpleTaskClient
 import mycorda.app.tasks.demo.CalcSquareTask
 import mycorda.app.tasks.demo.echo.*
 import mycorda.app.tasks.httpServer.Controller
+import mycorda.app.tasks.httpServer.TheApp
+import mycorda.app.tasks.logging.LoggingReaderContext
 import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
@@ -17,35 +22,16 @@ import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpTaskClientTests {
-    private val server: Http4kServer
-    private val port: Int
-
-    init {
-        val factory = TaskFactory()
-        factory.register(CalcSquareTask::class)
-        factory.register(EchoIntTask::class)
-        factory.register(EchoLongTask::class)
-        factory.register(EchoDoubleTask::class)
-        factory.register(EchoFloatTask::class)
-        factory.register(EchoBigDecimalTask::class)
-        factory.register(EchoBooleanTask::class)
-        factory.register(EchoUUIDTask::class)
-        factory.register(EchoEnumTask::class)
-        factory.register(EchoDemoModelTask::class)
-
-        port = 1234   // todo - auto detect port
-        val registry = Registry().store(factory)
-        server = Controller(registry).asServer(Jetty(port))
-    }
+    private val app = TheApp()
 
     @BeforeAll
     fun `start`() {
-        server.start()
+        app.start()
     }
 
     @AfterAll
     fun `stop`() {
-        server.stop()
+        app.stop()
     }
 
     @Test
@@ -89,5 +75,30 @@ class HttpTaskClientTests {
                 fail { "Combination $it failed with ${ex.message}" }
             }
         }
+    }
+
+    @Test
+    fun `should return stdout to client`() {
+        val client = HttpTaskClient("http://localhost:1234")
+        val ctx = SimpleClientContext()
+
+        client.execBlocking(
+            ctx, "mycorda.app.tasks.demo.echo.EchoToStdOutTask",
+            "Hello, world\n",
+            Unit::class
+        )
+
+//        val clientContext = SimpleClientContext()
+//        SimpleTaskClient(registry).execBlocking(
+//            clientContext,
+//            "mycorda.app.tasks.demo.echo.EchoToStdOutTask",
+//            "Hello, world\n",
+//            Unit::class
+//        )
+
+//        val readerContext: LoggingReaderContext = ctx.inMemoryLoggingContext()
+//        assertThat(readerContext.stdout(), equalTo("Hello, world\n"))
+//        assertThat(readerContext.stderr(), isEmptyString)
+//        assertThat(readerContext.messages(), isEmpty)
     }
 }

@@ -10,3 +10,7 @@ fun main(args: Array<String>) {
 
     println("hi $result")
 }
+
+class TheApp(port : Int = 12345){
+
+}

@@ -1,4 +1,4 @@
-package mycorda.app.tasks.httpServer
+package mycorda.app.tasks.httpClient
 
 import mycorda.app.registry.Registry
 import mycorda.app.tasks.BlockingTask
@@ -15,8 +15,6 @@ import mycorda.app.tasks.httpCommon.text
 import mycorda.app.tasks.logging.InMemoryLoggingConsumerContext
 import mycorda.app.tasks.logging.InMemoryLoggingProducerContext
 
-//data class ExecBlockingTaskRequest(val task: String, val input: Any)
-
 class Controller(private val registry: Registry) : HttpHandler {
     private val serializer = registry.geteOrElse(Serialiser::class.java, Serialiser())
     private val taskFactory = registry.get(TaskFactory::class.java)
@@ -26,7 +24,7 @@ class Controller(private val registry: Registry) : HttpHandler {
             "/status" bind Method.GET to {
                 Response.text("running")
             },
-            "/exec" bind Method.POST to {
+            "/channel/{" bind Method.POST to {
                 exceptionWrapper(::handleExecTask, it)
             }
         ),
