@@ -98,10 +98,34 @@ class HttpTaskClientTests {
         Thread.sleep(10L)
 
         val readerFactory = registry.get(LoggingReaderFactory::class.java)
-        val localLocator = LoggingChannelLocator("INMEMORY;${loggingChannelId}")
+        val localLocator = LoggingChannelLocator.inMemory(loggingChannelId)
         val readerContext: LoggingReaderContext = readerFactory.query(localLocator)
         assertThat(readerContext.stdout(), equalTo("Hello, world\n"))
         assertThat(readerContext.stderr(), isEmptyString)
+        assertThat(readerContext.messages(), isEmpty)
+    }
+
+    @Test
+    fun `should return stderr to client`() {
+        val client = HttpTaskClient("http://localhost:1234")
+        val loggingChannelId = String.random()
+        val loggingChannelLocator = LoggingChannelLocator("WS;${theClient.baseUrl()};$loggingChannelId")
+        val ctx = SimpleClientContext(loggingChannelLocator = loggingChannelLocator)
+
+        client.execBlocking(
+            ctx, "mycorda.app.tasks.demo.echo.EchoToStdErrTask",
+            "Opps\n",
+            Unit::class
+        )
+
+        // give it time to call back
+        Thread.sleep(10L)
+
+        val readerFactory = registry.get(LoggingReaderFactory::class.java)
+        val localLocator = LoggingChannelLocator.inMemory(loggingChannelId)
+        val readerContext: LoggingReaderContext = readerFactory.query(localLocator)
+        assertThat(readerContext.stdout(), isEmptyString)
+        assertThat(readerContext.stderr(), equalTo("Opps\n"))
         assertThat(readerContext.messages(), isEmpty)
     }
 }

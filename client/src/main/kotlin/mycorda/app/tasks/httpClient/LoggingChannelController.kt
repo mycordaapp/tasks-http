@@ -35,21 +35,21 @@ class LogChannelController(registry: Registry) : RoutingWsHandler {
         "/logChannel/{id}/stdout" bind { ws: Websocket ->
             val id = idLens(ws.upgradeRequest)
             ws.onMessage {
-                val locator = LoggingChannelLocator("INMEMORY;${id}")
+                val locator = LoggingChannelLocator.inMemory(id)
                 factory.consumer(locator).acceptStdout(it.bodyString())
             }
         },
         "/logChannel/{id}/stderr" bind { ws: Websocket ->
             val id = idLens(ws.upgradeRequest)
             ws.onMessage {
-                val locator = LoggingChannelLocator("INMEMORY;${id}")
+                val locator = LoggingChannelLocator.inMemory(id)
                 factory.consumer(locator).acceptStderr(it.bodyString())
             }
         },
         "/logChannel/{id}/log" bind { ws: Websocket ->
             val id = idLens(ws.upgradeRequest)
             ws.onMessage {
-                val locator = LoggingChannelLocator("INMEMORY;${id}")
+                val locator = LoggingChannelLocator.inMemory(id)
                 factory.consumer(locator).acceptLog(LogMessage.info(it.bodyString()))
             }
         }
