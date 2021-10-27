@@ -4,37 +4,37 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.isEmpty
 import com.natpryce.hamkrest.isEmptyString
+import mycorda.app.helpers.random
 import mycorda.app.registry.Registry
-import mycorda.app.tasks.TaskFactory
 import mycorda.app.tasks.client.SimpleClientContext
-import mycorda.app.tasks.client.SimpleTaskClient
-import mycorda.app.tasks.demo.CalcSquareTask
 import mycorda.app.tasks.demo.echo.*
-import mycorda.app.tasks.httpServer.Controller
-import mycorda.app.tasks.httpServer.TheApp
+import mycorda.app.tasks.httpServer.TheServerApp
+import mycorda.app.tasks.logging.InMemoryLoggingRepo
+import mycorda.app.tasks.logging.LoggingChannelLocator
 import mycorda.app.tasks.logging.LoggingReaderContext
-import org.http4k.server.Http4kServer
-import org.http4k.server.Jetty
-import org.http4k.server.asServer
+import mycorda.app.tasks.logging.LoggingReaderFactory
 import org.junit.jupiter.api.*
 import java.math.BigDecimal
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpTaskClientTests {
-    private val app = TheApp()
-    // client (for callback)
-    private val theClient = TheClientApp()
+    // server side
+    private val theServer = TheServerApp()
+
+    // client side (for callback)
+    private val registry = Registry().store(InMemoryLoggingRepo())// need a common InMemoryLoggingRepo
+    private val theClient = TheClientApp(registry)
 
     @BeforeAll
     fun `start`() {
-        app.start()
+        theServer.start()
         theClient.start()
     }
 
     @AfterAll
     fun `stop`() {
-        app.stop()
+        theServer.stop()
         theClient.stop()
     }
 
@@ -84,7 +84,9 @@ class HttpTaskClientTests {
     @Test
     fun `should return stdout to client`() {
         val client = HttpTaskClient("http://localhost:1234")
-        val ctx = SimpleClientContext()
+        val loggingChannelId = String.random()
+        val loggingChannelLocator = LoggingChannelLocator("WS;${theClient.baseUrl()};$loggingChannelId")
+        val ctx = SimpleClientContext(loggingChannelLocator = loggingChannelLocator)
 
         client.execBlocking(
             ctx, "mycorda.app.tasks.demo.echo.EchoToStdOutTask",
@@ -92,17 +94,14 @@ class HttpTaskClientTests {
             Unit::class
         )
 
-//        val clientContext = SimpleClientContext()
-//        SimpleTaskClient(registry).execBlocking(
-//            clientContext,
-//            "mycorda.app.tasks.demo.echo.EchoToStdOutTask",
-//            "Hello, world\n",
-//            Unit::class
-//        )
+        // give it time to call back
+        Thread.sleep(10L)
 
-//        val readerContext: LoggingReaderContext = ctx.inMemoryLoggingContext()
-//        assertThat(readerContext.stdout(), equalTo("Hello, world\n"))
-//        assertThat(readerContext.stderr(), isEmptyString)
-//        assertThat(readerContext.messages(), isEmpty)
+        val readerFactory = registry.get(LoggingReaderFactory::class.java)
+        val localLocator = LoggingChannelLocator("INMEMORY;${loggingChannelId}")
+        val readerContext: LoggingReaderContext = readerFactory.query(localLocator)
+        assertThat(readerContext.stdout(), equalTo("Hello, world\n"))
+        assertThat(readerContext.stderr(), isEmptyString)
+        assertThat(readerContext.messages(), isEmpty)
     }
 }

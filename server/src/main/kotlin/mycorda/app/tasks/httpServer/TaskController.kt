@@ -1,4 +1,4 @@
-package mycorda.app.tasks.httpClient
+package mycorda.app.tasks.httpServer
 
 import mycorda.app.registry.Registry
 import mycorda.app.tasks.BlockingTask
@@ -12,19 +12,20 @@ import kotlin.reflect.KFunction1
 import mycorda.app.tasks.httpCommon.Serialiser
 import mycorda.app.tasks.httpCommon.json
 import mycorda.app.tasks.httpCommon.text
-import mycorda.app.tasks.logging.InMemoryLoggingConsumerContext
-import mycorda.app.tasks.logging.LoggingProducerToConsumer
+import mycorda.app.tasks.logging.*
 
-class Controller(private val registry: Registry) : HttpHandler {
+
+class TaskController(registry: Registry) : HttpHandler {
     private val serializer = registry.geteOrElse(Serialiser::class.java, Serialiser())
     private val taskFactory = registry.get(TaskFactory::class.java)
+    private val loggingChannelFactory = registry.get(LoggingChannelFactory::class.java)
 
     private val routes: RoutingHttpHandler = routes(
         "/api" bind routes(
             "/status" bind Method.GET to {
                 Response.text("running")
             },
-            "/channel/{" bind Method.POST to {
+            "/exec" bind Method.POST to {
                 exceptionWrapper(::handleExecTask, it)
             }
         ),
@@ -41,25 +42,21 @@ class Controller(private val registry: Registry) : HttpHandler {
         val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
         val inputDeserialised = serializer.deserialiseData(model.inputSerialized)
 
-        // hook in logging producer / consumer pair
-        val x = InMemoryLoggingConsumerContext()
-        val loggingProducerContext = LoggingProducerToConsumer(x)
-        val ctx = SimpleExecutionContext(loggingProducerContext = loggingProducerContext)
+        val loggingConsumerContext = loggingChannelFactory.consumer(LoggingChannelLocator(model.loggingChannelLocator))
+        val producerContext = LoggingProducerToConsumer(loggingConsumerContext)
+
+        val ctx = SimpleExecutionContext(loggingProducerContext = producerContext)
 
         return try {
             val output = task.exec(ctx, inputDeserialised.any())
-
-            x.stdout()
             val outputSerialised = serializer.serialiseData(output)
-
-
             Response.json(outputSerialised)
         } catch (ex: Exception) {
             val exceptionSerialised = serializer.serialiseData(ex)
             Response.json(exceptionSerialised)
         }
-
     }
+
 
 //    @Suppress("UNCHECKED_CAST")
 //    fun clazz(clazzName: String): KClass<Any> {

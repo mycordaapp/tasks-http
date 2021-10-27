@@ -8,23 +8,23 @@ import org.http4k.core.Uri
 import org.http4k.websocket.WsMessage
 
 
-class WsCallbackLoggingConsumerContext(private val url: String) : LoggingConsumerContext {
+class WsCallbackLoggingConsumerContext(private val baseUrl: String, private val channelId: String) :
+    LoggingConsumerContext {
     override fun acceptLog(msg: LogMessage) {
-        val blockingClient = WebsocketClient.blocking(Uri.of("${url}/logChannel/1234/log"))
+        val blockingClient = WebsocketClient.blocking(Uri.of("${baseUrl}/logChannel/${channelId}/log"))
         blockingClient.send(WsMessage(msg.body))
         blockingClient.close()
-        //println(msg)
     }
 
     override fun acceptStderr(error: String) {
-        val blockingClient = WebsocketClient.blocking(Uri.of("${url}/logChannel/1234/stderr"))
+        val blockingClient = WebsocketClient.blocking(Uri.of("${baseUrl}/logChannel/${channelId}/stderr"))
         blockingClient.send(WsMessage(error))
         blockingClient.close()
-        //println(error)
     }
 
     override fun acceptStdout(output: String) {
-        val blockingClient = WebsocketClient.blocking(Uri.of("${url}/logChannel/1234/stdout"))
+        val uri = Uri.of("${baseUrl}/logChannel/${channelId}/stdout")
+        val blockingClient = WebsocketClient.blocking(uri)
         blockingClient.send(WsMessage(output))
         blockingClient.close()
     }

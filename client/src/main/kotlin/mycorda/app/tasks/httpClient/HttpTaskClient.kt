@@ -4,7 +4,6 @@ import mycorda.app.tasks.AsyncResultChannelSinkLocator
 import mycorda.app.tasks.client.ClientContext
 import mycorda.app.tasks.client.TaskClient
 import mycorda.app.tasks.httpCommon.BlockingTaskRequest
-import mycorda.app.tasks.httpCommon.NoLoggingContext
 import mycorda.app.tasks.httpCommon.Serialiser
 import mycorda.app.tasks.httpCommon.WsCallbackLoggingContext
 import mycorda.app.types.UniqueId
@@ -46,7 +45,7 @@ class HttpTaskClient(
         val model = BlockingTaskRequest(
             task = taskName,
             inputSerialized = inputToJsonString(input),
-            wsCallbackLoggingContext = WsCallbackLoggingContext(url = "ws://localhost:12345")
+            loggingChannelLocator = ctx.logChannelLocator().locator
         )
         val body = serializer.serialiseBlockingTaskRequest(model)
 

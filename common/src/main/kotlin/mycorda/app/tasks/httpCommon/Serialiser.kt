@@ -33,20 +33,17 @@ class Serialiser {
 }
 
 interface MapSerializable {
-    fun toMap() : Map<String,Any>
-    fun fromMap(map : Map<String,Any>) : Any
-}
-sealed class LoggingContextType
-data class WsCallbackLoggingContext(val url: String) : LoggingContextType() {
-
+    fun toMap(): Map<String, Any>
+    fun fromMap(map: Map<String, Any>): Any
 }
 
-class NoLoggingContext : LoggingContextType()
+data class WsCallbackLoggingContext(val baseUrl: String, val channelId: String)
+
 
 data class BlockingTaskRequest(
     val task: String,
     val inputSerialized: String,
-    val wsCallbackLoggingContext: WsCallbackLoggingContext ? = null
+    val loggingChannelLocator: String
 )
 
 

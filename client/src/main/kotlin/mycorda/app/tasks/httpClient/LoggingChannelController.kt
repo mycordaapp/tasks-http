@@ -1,0 +1,57 @@
+package mycorda.app.tasks.httpClient
+
+import mycorda.app.registry.Registry
+import mycorda.app.tasks.logging.LogMessage
+import mycorda.app.tasks.logging.LoggingChannelFactory
+import mycorda.app.tasks.logging.LoggingChannelLocator
+import org.http4k.core.Request
+import org.http4k.lens.Path
+import org.http4k.routing.*
+import org.http4k.websocket.Websocket
+import org.http4k.websocket.WsConsumer
+import org.http4k.websocket.WsFilter
+
+val idLens = Path.of("id")
+
+class LogChannelController(registry: Registry) : RoutingWsHandler {
+    private val factory = registry.get(LoggingChannelFactory::class.java)
+    override fun invoke(p1: Request): WsConsumer {
+        return handler.invoke(p1)
+    }
+
+    override fun match(request: Request): WsRouterMatch {
+        return handler.match(request)
+    }
+
+    override fun withBasePath(new: String): RoutingWsHandler {
+        return handler.withBasePath(new)
+    }
+
+    override fun withFilter(new: WsFilter): RoutingWsHandler {
+        return handler.withFilter(new)
+    }
+
+    val handler = websockets(
+        "/logChannel/{id}/stdout" bind { ws: Websocket ->
+            val id = idLens(ws.upgradeRequest)
+            ws.onMessage {
+                val locator = LoggingChannelLocator("INMEMORY;${id}")
+                factory.consumer(locator).acceptStdout(it.bodyString())
+            }
+        },
+        "/logChannel/{id}/stderr" bind { ws: Websocket ->
+            val id = idLens(ws.upgradeRequest)
+            ws.onMessage {
+                val locator = LoggingChannelLocator("INMEMORY;${id}")
+                factory.consumer(locator).acceptStderr(it.bodyString())
+            }
+        },
+        "/logChannel/{id}/log" bind { ws: Websocket ->
+            val id = idLens(ws.upgradeRequest)
+            ws.onMessage {
+                val locator = LoggingChannelLocator("INMEMORY;${id}")
+                factory.consumer(locator).acceptLog(LogMessage.info(it.bodyString()))
+            }
+        }
+    )
+}

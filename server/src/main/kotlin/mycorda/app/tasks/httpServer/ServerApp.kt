@@ -13,20 +13,21 @@ fun main(args: Array<String>) {
     //   - server listner bindings
     //   - a list of TaskRegistrations
     val registry = Registry()
-    TheApp(registry, 1234)
+    TheServerApp(registry, 1234)
 }
 
 
-class TheApp(registry: Registry = Registry(), port: Int = 1234) {
+class TheServerApp(registry: Registry = Registry(), port: Int = 1234) {
     private val server: Http4kServer
 
     init {
-        val factory = TaskFactory()
-        factory.register(DemoTasks())
-        factory.register(EchoTasks())
-        registry.store(factory)
+        val taskFactory = TaskFactory()
+        taskFactory.register(DemoTasks())
+        taskFactory.register(EchoTasks())
+        registry.store(ServerLoggingFactory(registry))
+        registry.store(taskFactory)
 
-        server = Controller(registry).asServer(Jetty(port))
+        server = TaskController(registry).asServer(Jetty(port))
         println("Server started on $port")
     }
 

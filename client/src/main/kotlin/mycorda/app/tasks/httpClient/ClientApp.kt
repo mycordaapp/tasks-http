@@ -1,6 +1,7 @@
 package mycorda.app.tasks.httpClient
 
 import mycorda.app.registry.Registry
+import mycorda.app.tasks.logging.DefaultLoggingChannelFactory
 import org.http4k.server.Http4kServer
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
@@ -12,10 +13,14 @@ fun main(args: Array<String>) {
     TheClientApp(registry, 12345)
 }
 
-class TheClientApp(private val registry: Registry = Registry(), port: Int = 12345) {
+class TheClientApp(
+    registry: Registry = Registry(),
+    private val port: Int = 12345
+) {
     private val server: Http4kServer
 
     init {
+        registry.store(DefaultLoggingChannelFactory(registry))
         server = LogChannelController(registry).asServer(Jetty(port)).start()
     }
 
@@ -27,4 +32,5 @@ class TheClientApp(private val registry: Registry = Registry(), port: Int = 1234
         server.stop()
     }
 
+    fun baseUrl(): String = "ws://localhost:$port"
 }
