@@ -23,15 +23,19 @@ import java.util.*
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpTaskClientTests {
     private val app = TheApp()
+    // client (for callback)
+    private val theClient = TheClientApp()
 
     @BeforeAll
     fun `start`() {
         app.start()
+        theClient.start()
     }
 
     @AfterAll
     fun `stop`() {
         app.stop()
+        theClient.stop()
     }
 
     @Test

@@ -1,6 +1,5 @@
 package mycorda.app.tasks.httpClient
 
-
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.cookie.StandardCookieSpec
 import org.apache.hc.client5.http.impl.classic.HttpClients

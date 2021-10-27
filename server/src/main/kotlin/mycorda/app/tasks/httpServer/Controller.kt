@@ -4,6 +4,7 @@ import mycorda.app.registry.Registry
 import mycorda.app.tasks.BlockingTask
 import mycorda.app.tasks.TaskFactory
 import mycorda.app.tasks.executionContext.SimpleExecutionContext
+import mycorda.app.tasks.httpCommon.BlockingTaskRequest
 import org.http4k.core.*
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
@@ -13,7 +14,8 @@ import mycorda.app.tasks.httpCommon.Serialiser
 import mycorda.app.tasks.httpCommon.json
 import mycorda.app.tasks.httpCommon.text
 import mycorda.app.tasks.logging.InMemoryLoggingConsumerContext
-import mycorda.app.tasks.logging.InMemoryLoggingProducerContext
+import mycorda.app.tasks.logging.LoggingProducerContext
+import mycorda.app.tasks.logging.LoggingProducerToConsumer
 
 //data class ExecBlockingTaskRequest(val task: String, val input: Any)
 
@@ -43,24 +45,27 @@ class Controller(private val registry: Registry) : HttpHandler {
         val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
         val inputDeserialised = serializer.deserialiseData(model.inputSerialized)
 
-        // hook in logging producer / consumer pair
-        val x = InMemoryLoggingConsumerContext()
-        val loggingProducerContext = InMemoryLoggingProducerContext(x)
-        val ctx = SimpleExecutionContext(loggingProducerContext = loggingProducerContext)
+        val producerContext = buildLoggingProducerContext(model)
+        val ctx = SimpleExecutionContext(loggingProducerContext = producerContext)
 
         return try {
             val output = task.exec(ctx, inputDeserialised.any())
-
-            x.stdout()
             val outputSerialised = serializer.serialiseData(output)
-
-
             Response.json(outputSerialised)
         } catch (ex: Exception) {
             val exceptionSerialised = serializer.serialiseData(ex)
             Response.json(exceptionSerialised)
         }
+    }
 
+    private fun buildLoggingProducerContext(request : BlockingTaskRequest) : LoggingProducerContext {
+        return if (request.wsCallbackLoggingContext == null) {
+            val x = InMemoryLoggingConsumerContext()
+            LoggingProducerToConsumer(x)
+        } else {
+            val localConsumer = WsCallbackLoggingConsumerContext(request.wsCallbackLoggingContext!!.url)
+            LoggingProducerToConsumer(localConsumer)
+        }
     }
 
 //    @Suppress("UNCHECKED_CAST")

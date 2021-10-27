@@ -13,7 +13,7 @@ import mycorda.app.tasks.httpCommon.Serialiser
 import mycorda.app.tasks.httpCommon.json
 import mycorda.app.tasks.httpCommon.text
 import mycorda.app.tasks.logging.InMemoryLoggingConsumerContext
-import mycorda.app.tasks.logging.InMemoryLoggingProducerContext
+import mycorda.app.tasks.logging.LoggingProducerToConsumer
 
 class Controller(private val registry: Registry) : HttpHandler {
     private val serializer = registry.geteOrElse(Serialiser::class.java, Serialiser())
@@ -43,7 +43,7 @@ class Controller(private val registry: Registry) : HttpHandler {
 
         // hook in logging producer / consumer pair
         val x = InMemoryLoggingConsumerContext()
-        val loggingProducerContext = InMemoryLoggingProducerContext(x)
+        val loggingProducerContext = LoggingProducerToConsumer(x)
         val ctx = SimpleExecutionContext(loggingProducerContext = loggingProducerContext)
 
         return try {

@@ -1,16 +1,30 @@
-package mycorda.app.tasks.http
+package mycorda.app.tasks.httpClient
 
-import mycorda.app.tasks.BlockingTask
-import mycorda.app.tasks.demo.CalcSquareTask
-
+import mycorda.app.registry.Registry
+import org.http4k.server.Http4kServer
+import org.http4k.server.Jetty
+import org.http4k.server.asServer
 
 fun main(args: Array<String>) {
-    val t: BlockingTask<Int, Int> = CalcSquareTask()
-    val result = t.exec(input = 10)
-
-    println("hi $result")
+    // todo - how to inject in ?
+    //   - server listner bindings
+    val registry = Registry()
+    TheClientApp(registry, 12345)
 }
 
-class TheApp(port : Int = 12345){
+class TheClientApp(private val registry: Registry = Registry(), port: Int = 12345) {
+    private val server: Http4kServer
+
+    init {
+        server = LogChannelController(registry).asServer(Jetty(port)).start()
+    }
+
+    fun start() {
+        server.start()
+    }
+
+    fun stop() {
+        server.stop()
+    }
 
 }
