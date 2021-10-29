@@ -1,6 +1,7 @@
 package mycorda.app.tasks.httpClient
 
 import mycorda.app.registry.Registry
+import mycorda.app.rss.JsonSerialiser
 import mycorda.app.tasks.logging.LogMessage
 import mycorda.app.tasks.logging.LoggingChannelFactory
 import mycorda.app.tasks.logging.LoggingChannelLocator
@@ -11,10 +12,9 @@ import org.http4k.websocket.Websocket
 import org.http4k.websocket.WsConsumer
 import org.http4k.websocket.WsFilter
 
-val idLens = Path.of("id")
-
 class LogChannelController(registry: Registry) : RoutingWsHandler {
     private val factory = registry.get(LoggingChannelFactory::class.java)
+    private val serializer = JsonSerialiser()
     override fun invoke(p1: Request): WsConsumer {
         return handler.invoke(p1)
     }
@@ -31,7 +31,8 @@ class LogChannelController(registry: Registry) : RoutingWsHandler {
         return handler.withFilter(new)
     }
 
-    val handler = websockets(
+    val idLens = Path.of("id")
+    private val handler = websockets(
         "/logChannel/{id}/stdout" bind { ws: Websocket ->
             val id = idLens(ws.upgradeRequest)
             ws.onMessage {
@@ -49,8 +50,9 @@ class LogChannelController(registry: Registry) : RoutingWsHandler {
         "/logChannel/{id}/log" bind { ws: Websocket ->
             val id = idLens(ws.upgradeRequest)
             ws.onMessage {
+                val msg = serializer.deserialiseData(it.bodyString()).data as LogMessage
                 val locator = LoggingChannelLocator.inMemory(id)
-                factory.consumer(locator).acceptLog(LogMessage.info(it.bodyString()))
+                factory.consumer(locator).acceptLog(msg)
             }
         }
     )

@@ -35,14 +35,13 @@ class TaskController(registry: Registry) : HttpHandler {
     )
 
     private fun handleExecTask(it: Request): Response {
-        val model = serializer.deserialiseBlockingTaskRequest(it.bodyString())
-
+        val taskRequest = serializer.deserialiseBlockingTaskRequest(it.bodyString())
 
         @Suppress("UNCHECKED_CAST")
-        val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
-        val inputDeserialised = serializer.deserialiseData(model.inputSerialized)
+        val task = taskFactory.createInstance(taskRequest.task) as BlockingTask<Any, Any>
+        val inputDeserialised = serializer.deserialiseData(taskRequest.inputSerialized)
 
-        val loggingConsumerContext = loggingChannelFactory.consumer(LoggingChannelLocator(model.loggingChannelLocator))
+        val loggingConsumerContext = loggingChannelFactory.consumer(LoggingChannelLocator(taskRequest.loggingChannelLocator))
         val producerContext = LoggingProducerToConsumer(loggingConsumerContext)
 
         val ctx = SimpleExecutionContext(loggingProducerContext = producerContext)
@@ -56,20 +55,6 @@ class TaskController(registry: Registry) : HttpHandler {
             Response.json(exceptionSerialised)
         }
     }
-
-
-//    @Suppress("UNCHECKED_CAST")
-//    fun clazz(clazzName: String): KClass<Any> {
-//        return when (clazzName) {
-//            "kotlin.Int" -> 1::class as KClass<Any>
-//            "kotlin.Long" -> 1L::class as KClass<Any>
-//            "kotlin.Double" -> 1.23::class as KClass<Any>
-//            "kotlin.Float" -> 1.23f::class as KClass<Any>
-//            "kotlin.Boolean" -> true::class as KClass<Any>
-//            "kotlin.String" -> ""::class as KClass<Any>
-//            else -> Class.forName(clazzName).kotlin as KClass<Any>
-//        }
-//    }
 
     private fun exceptionWrapper(x: KFunction1<Request, Response>, i: Request): Response {
         return try {
