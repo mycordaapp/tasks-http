@@ -72,6 +72,10 @@ subprojects {
         implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
         implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
+        implementation platform("org.http4k:http4k-bom:$http4kVersion")
+        implementation("org.http4k:http4k-core")
+        implementation("org.http4k:http4k-server-jetty")
+        implementation("org.http4k:http4k-client-websocket")
 
         implementation "com.github.mycordaapp:tasks:$tasksVersion"
         implementation "com.github.mycordaapp:commons:$commonsVersion"

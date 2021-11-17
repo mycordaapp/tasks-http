@@ -1,12 +1,12 @@
 package mycorda.app.tasks.httpClient
 
-
 import mycorda.app.tasks.AsyncResultChannelSinkLocator
-import mycorda.app.tasks.UniqueId
 import mycorda.app.tasks.client.ClientContext
 import mycorda.app.tasks.client.TaskClient
 import mycorda.app.tasks.httpCommon.BlockingTaskRequest
 import mycorda.app.tasks.httpCommon.Serialiser
+import mycorda.app.tasks.httpCommon.WsCallbackLoggingContext
+import mycorda.app.types.UniqueId
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.classic.HttpClients
 import org.apache.hc.core5.util.Timeout
@@ -44,15 +44,14 @@ class HttpTaskClient(
         val url = buildUrl(baseUrl, ctx, null)
         val model = BlockingTaskRequest(
             task = taskName,
-            inputSerialized = inputToJsonString(input)
+            inputSerialized = inputToJsonString(input),
+            loggingChannelLocator = ctx.logChannelLocator().locator
         )
         val body = serializer.serialiseBlockingTaskRequest(model)
 
-        val request = Request(Method.POST, url)
-            .body(body)
+        val request = Request(Method.POST, url).body(body)
 
         val result = runRequest(request, taskName, 10)
-
 
         val deserialized = serializer.deserialiseData(result)
 

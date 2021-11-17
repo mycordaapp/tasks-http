@@ -10,12 +10,15 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 import kotlin.reflect.KFunction1
 import mycorda.app.tasks.httpCommon.Serialiser
+import mycorda.app.tasks.httpCommon.json
+import mycorda.app.tasks.httpCommon.text
+import mycorda.app.tasks.logging.*
 
-data class ExecBlockingTaskRequest(val task: String, val input: Any)
 
-class Controller(private val registry: Registry) : HttpHandler {
+class TaskController(registry: Registry) : HttpHandler {
     private val serializer = registry.geteOrElse(Serialiser::class.java, Serialiser())
     private val taskFactory = registry.get(TaskFactory::class.java)
+    private val loggingChannelFactory = registry.get(LoggingChannelFactory::class.java)
 
     private val routes: RoutingHttpHandler = routes(
         "/api" bind routes(
@@ -32,36 +35,26 @@ class Controller(private val registry: Registry) : HttpHandler {
     )
 
     private fun handleExecTask(it: Request): Response {
-        val model = serializer.deserialiseBlockingTaskRequest(it.bodyString())
+        val taskRequest = serializer.deserialiseBlockingTaskRequest(it.bodyString())
 
         @Suppress("UNCHECKED_CAST")
-        val task = taskFactory.createInstance(model.task) as BlockingTask<Any, Any>
-        val ctx = SimpleExecutionContext()
-        val inputDeserialised = serializer.deserialiseData(model.inputSerialized)
+        val task = taskFactory.createInstance(taskRequest.task) as BlockingTask<Any, Any>
+        val inputDeserialised = serializer.deserialiseData(taskRequest.inputSerialized)
+
+        val loggingConsumerContext = loggingChannelFactory.consumer(LoggingChannelLocator(taskRequest.loggingChannelLocator))
+        val producerContext = LoggingProducerToConsumer(loggingConsumerContext)
+
+        val ctx = SimpleExecutionContext(loggingProducerContext = producerContext)
 
         return try {
             val output = task.exec(ctx, inputDeserialised.any())
             val outputSerialised = serializer.serialiseData(output)
             Response.json(outputSerialised)
-        } catch (ex : Exception) {
+        } catch (ex: Exception) {
             val exceptionSerialised = serializer.serialiseData(ex)
             Response.json(exceptionSerialised)
         }
-
     }
-
-//    @Suppress("UNCHECKED_CAST")
-//    fun clazz(clazzName: String): KClass<Any> {
-//        return when (clazzName) {
-//            "kotlin.Int" -> 1::class as KClass<Any>
-//            "kotlin.Long" -> 1L::class as KClass<Any>
-//            "kotlin.Double" -> 1.23::class as KClass<Any>
-//            "kotlin.Float" -> 1.23f::class as KClass<Any>
-//            "kotlin.Boolean" -> true::class as KClass<Any>
-//            "kotlin.String" -> ""::class as KClass<Any>
-//            else -> Class.forName(clazzName).kotlin as KClass<Any>
-//        }
-//    }
 
     private fun exceptionWrapper(x: KFunction1<Request, Response>, i: Request): Response {
         return try {

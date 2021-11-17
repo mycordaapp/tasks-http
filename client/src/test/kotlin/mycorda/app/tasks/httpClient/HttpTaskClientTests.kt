@@ -2,50 +2,40 @@ package mycorda.app.tasks.httpClient
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.isEmpty
+import com.natpryce.hamkrest.isEmptyString
+import mycorda.app.helpers.random
 import mycorda.app.registry.Registry
-import mycorda.app.tasks.TaskFactory
 import mycorda.app.tasks.client.SimpleClientContext
-import mycorda.app.tasks.demo.CalcSquareTask
 import mycorda.app.tasks.demo.echo.*
-import mycorda.app.tasks.httpServer.Controller
-import org.http4k.server.Http4kServer
-import org.http4k.server.Jetty
-import org.http4k.server.asServer
+import mycorda.app.tasks.httpServer.TheServerApp
+import mycorda.app.tasks.logging.InMemoryLoggingRepo
+import mycorda.app.tasks.logging.LoggingChannelLocator
+import mycorda.app.tasks.logging.LoggingReaderContext
+import mycorda.app.tasks.logging.LoggingReaderFactory
 import org.junit.jupiter.api.*
 import java.math.BigDecimal
 import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HttpTaskClientTests {
-    private val server: Http4kServer
-    private val port: Int
+    // server side
+    private val theServer = TheServerApp()
 
-    init {
-        val factory = TaskFactory()
-        factory.register(CalcSquareTask::class)
-        factory.register(EchoIntTask::class)
-        factory.register(EchoLongTask::class)
-        factory.register(EchoDoubleTask::class)
-        factory.register(EchoFloatTask::class)
-        factory.register(EchoBigDecimalTask::class)
-        factory.register(EchoBooleanTask::class)
-        factory.register(EchoUUIDTask::class)
-        factory.register(EchoEnumTask::class)
-        factory.register(EchoDemoModelTask::class)
-
-        port = 1234   // todo - auto detect port
-        val registry = Registry().store(factory)
-        server = Controller(registry).asServer(Jetty(port))
-    }
+    // client side (for callback)
+    private val registry = Registry().store(InMemoryLoggingRepo())// need a common InMemoryLoggingRepo
+    private val theClient = TheClientApp(registry)
 
     @BeforeAll
     fun `start`() {
-        server.start()
+        theServer.start()
+        theClient.start()
     }
 
     @AfterAll
     fun `stop`() {
-        server.stop()
+        theServer.stop()
+        theClient.stop()
     }
 
     @Test
@@ -89,5 +79,53 @@ class HttpTaskClientTests {
                 fail { "Combination $it failed with ${ex.message}" }
             }
         }
+    }
+
+    @Test
+    fun `should return stdout to client`() {
+        val client = HttpTaskClient("http://localhost:1234")
+        val loggingChannelId = String.random()
+        val loggingChannelLocator = LoggingChannelLocator("WS;${theClient.baseUrl()};$loggingChannelId")
+        val ctx = SimpleClientContext(loggingChannelLocator = loggingChannelLocator)
+
+        client.execBlocking(
+            ctx, "mycorda.app.tasks.demo.echo.EchoToStdOutTask",
+            "Hello, world\n",
+            Unit::class
+        )
+
+        // give it time to call back
+        Thread.sleep(10L)
+
+        val readerFactory = registry.get(LoggingReaderFactory::class.java)
+        val localLocator = LoggingChannelLocator.inMemory(loggingChannelId)
+        val readerContext: LoggingReaderContext = readerFactory.query(localLocator)
+        assertThat(readerContext.stdout(), equalTo("Hello, world\n"))
+        assertThat(readerContext.stderr(), isEmptyString)
+        assertThat(readerContext.messages(), isEmpty)
+    }
+
+    @Test
+    fun `should return stderr to client`() {
+        val client = HttpTaskClient("http://localhost:1234")
+        val loggingChannelId = String.random()
+        val loggingChannelLocator = LoggingChannelLocator("WS;${theClient.baseUrl()};$loggingChannelId")
+        val ctx = SimpleClientContext(loggingChannelLocator = loggingChannelLocator)
+
+        client.execBlocking(
+            ctx, "mycorda.app.tasks.demo.echo.EchoToStdErrTask",
+            "Opps\n",
+            Unit::class
+        )
+
+        // give it time to call back
+        Thread.sleep(10L)
+
+        val readerFactory = registry.get(LoggingReaderFactory::class.java)
+        val localLocator = LoggingChannelLocator.inMemory(loggingChannelId)
+        val readerContext: LoggingReaderContext = readerFactory.query(localLocator)
+        assertThat(readerContext.stdout(), isEmptyString)
+        assertThat(readerContext.stderr(), equalTo("Opps\n"))
+        assertThat(readerContext.messages(), isEmpty)
     }
 }

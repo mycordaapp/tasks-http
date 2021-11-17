@@ -1,7 +1,6 @@
 # The "Tasks-Http" framework
 
-[![Build Status](https://travis-ci.com/mycordaapp/tasks-http.svg?branch=master)](https://app.travis-ci.com/github/mycordaapp/tasks-http) [travis]
-[![Circle CI](https://circleci.com/gh/mycordaapp/tasks-http.svg?style=shield)](https://circleci.com/gh/mycordaapp/tasks-http) [circleci]
+[![Circle CI](https://circleci.com/gh/mycordaapp/tasks-http.svg?style=shield)](https://circleci.com/gh/mycordaapp/tasks-http)
 [![Licence Status](https://img.shields.io/github/license/mycordaapp/tasks)](https://github.com/mycordaapp/tasks-http/blob/master/licence.txt)
 
 ## What it does
@@ -17,7 +16,7 @@ As with everything in [myCorda dot App](https://mycorda.app), this library has m
 * The [http4k](https://www.http4k.org/) toolkit
 * The [Tasks](https://github.com/mycordaapp/tasks#readme) framework
 * The object [Registry](https://github.com/mycordaapp/registry#readme)
-* The [Helpers](https://github.com/mycordaapp/helpers#readme) module
+* The [Commons](https://github.com/mycordaapp/commons#readme) module
 
 ## Next Steps
 

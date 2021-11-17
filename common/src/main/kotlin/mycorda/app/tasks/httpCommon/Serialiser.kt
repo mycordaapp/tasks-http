@@ -32,6 +32,19 @@ class Serialiser {
     }
 }
 
+interface MapSerializable {
+    fun toMap(): Map<String, Any>
+    fun fromMap(map: Map<String, Any>): Any
+}
+
+data class WsCallbackLoggingContext(val baseUrl: String, val channelId: String)
+
+
 data class BlockingTaskRequest(
     val task: String,
-    val inputSerialized: String)
+    val inputSerialized: String,
+    val loggingChannelLocator: String
+)
+
+
+
