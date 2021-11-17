@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.isEmptyString
 import mycorda.app.helpers.random
 import mycorda.app.registry.Registry
 import mycorda.app.tasks.client.SimpleClientContext
+import mycorda.app.tasks.demo.CalcSquareTask
 import mycorda.app.tasks.demo.echo.*
 import mycorda.app.tasks.httpServer.TheServerApp
 import mycorda.app.tasks.logging.InMemoryLoggingRepo
