@@ -1,5 +1,5 @@
 dependencies {
-    implementation project(":tasks-http-common")
+    implementation project(":tasks-http4k-common")
 
     implementation platform("org.http4k:http4k-bom:$http4kVersion")
     implementation("org.http4k:http4k-core")

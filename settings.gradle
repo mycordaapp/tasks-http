@@ -1,12 +1,12 @@
-rootProject.name = 'tasks-http'
+rootProject.name = 'tasks-http4k'
 
-include "tasks-http-common"
-project(":tasks-http-common").projectDir = file("common")
-include "tasks-http-server"
-project(":tasks-http-server").projectDir = file("server")
-include "tasks-http-client"
-project(":tasks-http-client").projectDir = file("client")
-include "tasks-http-examples"
-project(":tasks-http-examples").projectDir = file("examples")
+include "tasks-http4k-common"
+project(":tasks-http4k-common").projectDir = file("common")
+include "tasks-http4k-server"
+project(":tasks-http4k-server").projectDir = file("server")
+include "tasks-http4k-client"
+project(":tasks-http4k-client").projectDir = file("client")
+include "tasks-http4k-examples"
+project(":tasks-http4k-examples").projectDir = file("examples")
 
 

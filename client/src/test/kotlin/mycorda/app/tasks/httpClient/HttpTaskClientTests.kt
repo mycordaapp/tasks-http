@@ -54,7 +54,7 @@ class HttpTaskClientTests {
         val ctx = SimpleClientContext()
 
         val result = client.execBlocking(
-            ctx, "mycorda.app.tasks.demo.CalcSquareTask", 10, Int::class
+            ctx, CalcSquareTask::class.qualifiedName!!, 10, Int::class
         )
         assertThat(result, equalTo(100))
     }
