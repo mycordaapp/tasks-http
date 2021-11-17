@@ -9,10 +9,15 @@
 
 Deployed to jitpack. See releases for version details. To include in your project, if using gradle:
 
-\\ add jitpack repo maven { url "https://jitpack.io" }
+```groovy
+//add jitpack repo 
+maven { url "https://jitpack.io" }
 
-\\ include the dependency implementation 'com.github.mycordaapp:tasks-http4k:<version>'
+//include the dependency 
+implementation 'com.github.mycordaapp:tasks-http4k:<version>'
+```
 JitPack build status is at https://jitpack.io/com/github/mycordaapp/tasks-http4k/$releaseTag/build.log
+
 
 ## Dependencies
 
